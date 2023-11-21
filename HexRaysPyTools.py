@@ -1,6 +1,7 @@
 import logging
 
 import idaapi
+import ida_hexrays
 
 import HexRaysPyTools.core.cache as cache
 import HexRaysPyTools.core.const as const
@@ -8,7 +9,6 @@ import HexRaysPyTools.settings as settings
 from HexRaysPyTools.callbacks import hx_callback_manager, action_manager
 from HexRaysPyTools.core.struct_xrefs import XrefStorage
 from HexRaysPyTools.core.temporary_structure import TemporaryStructureModel
-
 
 class MyPlugin(idaapi.plugin_t):
     flags = 0
@@ -19,20 +19,13 @@ class MyPlugin(idaapi.plugin_t):
 
     @staticmethod
     def init():
-        if not idaapi.init_hexrays_plugin():
-            logging.error("Failed to initialize Hex-Rays SDK")
-            return idaapi.PLUGIN_SKIP
-
-        action_manager.initialize()
-        hx_callback_manager.initialize()
-        cache.temporary_structure = TemporaryStructureModel()
-        const.init()
-        XrefStorage().open()
+        # Only perform initialization if explicitly activated by the user
         return idaapi.PLUGIN_KEEP
 
     @staticmethod
     def run(*args):
-        pass
+        # Perform the specific initialization when the user activates the plugin
+        initialize_plugin()
 
     @staticmethod
     def term():
@@ -41,6 +34,16 @@ class MyPlugin(idaapi.plugin_t):
         XrefStorage().close()
         idaapi.term_hexrays_plugin()
 
+def initialize_plugin():
+    # Your specific initialization code goes here
+    if not idaapi.init_hexrays_plugin():
+        logging.error("Failed to initialize Hex-Rays SDK")
+        return idaapi.PLUGIN_SKIP
+    action_manager.initialize()
+    hx_callback_manager.initialize()
+    cache.temporary_structure = TemporaryStructureModel()
+    const.init()
+    XrefStorage().open()
 
 def PLUGIN_ENTRY():
     settings.load_settings()
